@@ -20,6 +20,7 @@ struct RegionView: View {
                         position: regionDef.position
                     )
                 }
+                .animation(.easeInOut(duration: 0.3), value: viewModel.isRegionTargeted(countryIndex: countryIndex, regionIndex: regionIndex))
                 .animation(.easeInOut(duration: 1.5), value: viewModel.isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex))
             
             if viewModel.regionHasAirDefense(countryIndex: countryIndex, regionIndex: regionIndex) {
@@ -45,7 +46,7 @@ struct RegionView: View {
         if viewModel.currentPhase == .targeting &&
            !viewModel.isHumanRegion(countryIndex: countryIndex) &&
            viewModel.isRegionTargeted(countryIndex: countryIndex, regionIndex: regionIndex) {
-            return .red.opacity(0.5)
+            return .red
         }
         
         // Economy phase - highlight selected human region in blue

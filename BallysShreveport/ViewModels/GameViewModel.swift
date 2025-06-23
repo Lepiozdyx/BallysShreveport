@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import Combine
 
 @MainActor
 class GameViewModel: ObservableObject {
@@ -9,17 +10,34 @@ class GameViewModel: ObservableObject {
     @Published var gameResult: GameResult?
     @Published var selectedRegionIndex: Int?
     @Published var showingRegionMenu: Bool = false
+    @Published var attackTargets: [AttackTarget] = []
     
     weak var appViewModel: AppViewModel?
+    private var cancellables = Set<AnyCancellable>()
     
     init(gameManager: GameManager) {
         self.gameManager = gameManager
+        setupObservers()
+    }
+    
+    private func setupObservers() {
+        // Observe changes in gameManager
+        gameManager.$game
+            .sink { [weak self] _ in
+                self?.updateAttackTargets()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func updateAttackTargets() {
+        attackTargets = gameManager.getAttackTargets()
     }
     
     // MARK: - Game Lifecycle
     func startNewGame() {
         gameManager.startNewGame()
         resetGameUI()
+        updateAttackTargets()
     }
     
     func pauseGame() {
@@ -40,12 +58,14 @@ class GameViewModel: ObservableObject {
         gameResult = nil
         selectedRegionIndex = nil
         showingRegionMenu = false
+        attackTargets = []
     }
     
     // MARK: - Phase Management
     func endCurrentPhase() {
         gameManager.endCurrentPhase()
         closeRegionMenu()
+        updateAttackTargets()
         checkForGameEnd()
     }
     
@@ -105,6 +125,7 @@ class GameViewModel: ObservableObject {
               canBuyRocket() else { return }
         
         gameManager.buyRocketForRegion(regionIndex)
+        updateAttackTargets()
         closeRegionMenu()
     }
     
@@ -113,21 +134,25 @@ class GameViewModel: ObservableObject {
               canBuyAirDefense(for: regionIndex) else { return }
         
         gameManager.buyAirDefenseForRegion(regionIndex)
+        updateAttackTargets()
         closeRegionMenu()
     }
     
     func closeRegionMenu() {
         showingRegionMenu = false
         selectedRegionIndex = nil
+        updateAttackTargets()
     }
     
     // MARK: - Targeting Phase Actions
     func selectAttackTarget(countryIndex: Int, regionIndex: Int) {
         gameManager.selectAttackTarget(countryIndex: countryIndex, regionIndex: regionIndex)
+        updateAttackTargets()
     }
     
     func removeAttackTarget(at index: Int) {
         gameManager.removeAttackTarget(at: index)
+        updateAttackTargets()
     }
     
     // MARK: - Game State Properties
@@ -169,10 +194,6 @@ class GameViewModel: ObservableObject {
     
     var animationInProgress: Bool {
         gameManager.animationInProgress
-    }
-    
-    var attackTargets: [AttackTarget] {
-        gameManager.getAttackTargets()
     }
     
     // MARK: - Region State Queries
@@ -368,5 +389,6 @@ class GameViewModel: ObservableObject {
     // MARK: - Setup
     func setupWith(appViewModel: AppViewModel) {
         self.appViewModel = appViewModel
+        updateAttackTargets()
     }
 }
