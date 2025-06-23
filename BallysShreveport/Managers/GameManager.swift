@@ -24,14 +24,6 @@ class GameManager: ObservableObject {
         game.startGame()
     }
     
-    func pauseGame() {
-        // Game pause logic if needed
-    }
-    
-    func resumeGame() {
-        // Game resume logic if needed
-    }
-    
     // MARK: - AI Systems Setup
     private func initializeAISystems() {
         aiSystems.removeAll()
@@ -60,32 +52,95 @@ class GameManager: ObservableObject {
         // Execute AI purchases for all AI players
         executeAIPurchases()
         game.nextPhase()
+        objectWillChange.send()
     }
     
     private func processTargetingPhaseEnd() {
         // Execute AI targeting for all AI players
         executeAITargeting()
+        // Automatically proceed to resolution phase
         game.nextPhase()
+        objectWillChange.send()
+        // Start resolution processing immediately
+        processResolutionPhaseEnd()
     }
     
     private func processResolutionPhaseEnd() {
         isProcessingTurn = true
+        animationInProgress = true
         
         // Store resolution for animation
         if let lastResolution = game.turnResolutions.last {
             lastTurnResolution = lastResolution
         }
         
-        // Process resolution and check for game end
+        // Process resolution
         game.nextPhase()
         
-        // Victory reward will be handled by AppViewModel
+        // Check for immediate player defeat
+        if checkForPlayerDefeat() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.isProcessingTurn = false
+                self.animationInProgress = false
+            }
+            return
+        }
         
-        // Simulate animation delay
+        // Check for other game end conditions
+        if checkGameEndConditions() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.isProcessingTurn = false
+                self.animationInProgress = false
+            }
+            return
+        }
+        
+        // Continue game with animation delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             self.isProcessingTurn = false
             self.animationInProgress = false
         }
+    }
+    
+    private func checkForPlayerDefeat() -> Bool {
+        guard let humanPlayer = game.humanPlayer else { return false }
+        let humanCountry = game.countries[humanPlayer.countryIndex]
+        
+        if humanCountry.isDestroyed {
+            game.gameState = .defeat
+            return true
+        }
+        
+        return false
+    }
+    
+    private func checkGameEndConditions() -> Bool {
+        let aliveCount = game.aliveCountriesCount
+        
+        // Check for victory/defeat
+        if aliveCount == 1 {
+            let winnerCountry = game.aliveCountries.first!
+            if let humanPlayer = game.humanPlayer, humanPlayer.countryIndex == winnerCountry.countryIndex {
+                game.gameState = .victory
+            } else {
+                game.gameState = .defeat
+            }
+            return true
+        }
+        
+        // Check for draw (no survivors)
+        if aliveCount == 0 {
+            game.gameState = .draw
+            return true
+        }
+        
+        // Check for max rounds
+        if game.currentRound >= game.maxRounds {
+            game.gameState = .maxRoundsReached
+            return true
+        }
+        
+        return false
     }
     
     // MARK: - Human Player Actions
@@ -102,6 +157,7 @@ class GameManager: ObservableObject {
         if game.players[playerIndex].buyRocket() {
             let action = GameAction.buyRocket(regionIndex: regionIndex)
             game.playerActions[humanPlayer.id]?.addPurchaseAction(action)
+            objectWillChange.send()
         }
         
         closeRegionMenu()
@@ -116,6 +172,7 @@ class GameManager: ObservableObject {
            game.countries[humanCountryIndex].addAirDefenseToRegion(at: regionIndex) {
             let action = GameAction.buyAirDefense(regionIndex: regionIndex)
             game.playerActions[humanPlayer.id]?.addPurchaseAction(action)
+            objectWillChange.send()
         }
         
         closeRegionMenu()
@@ -144,6 +201,9 @@ class GameManager: ObservableObject {
         if let playerIndex = game.players.firstIndex(where: { $0.id == humanPlayer.id }) {
             _ = game.players[playerIndex].useRocket()
         }
+        
+        // Notify UI of changes
+        objectWillChange.send()
     }
     
     func removeAttackTarget(at index: Int) {
@@ -155,6 +215,9 @@ class GameManager: ObservableObject {
         if let playerIndex = game.players.firstIndex(where: { $0.id == humanPlayer.id }) {
             game.players[playerIndex].availableRockets += 1
         }
+        
+        // Notify UI of changes
+        objectWillChange.send()
     }
     
     // MARK: - AI Execution
@@ -219,11 +282,11 @@ class GameManager: ObservableObject {
     var canEndPhase: Bool {
         switch game.currentPhase {
         case .economy:
-            return true // Can always end economy phase
-        case .targeting:
-            return true // Can always end targeting phase
-        case .resolution:
             return !isProcessingTurn
+        case .targeting:
+            return !isProcessingTurn
+        case .resolution:
+            return !isProcessingTurn && !animationInProgress
         }
     }
     

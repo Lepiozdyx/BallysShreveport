@@ -9,7 +9,6 @@ class GameViewModel: ObservableObject {
     @Published var gameResult: GameResult?
     @Published var selectedRegionIndex: Int?
     @Published var showingRegionMenu: Bool = false
-    @Published var regionMenuPosition: CGPoint = .zero
     
     weak var appViewModel: AppViewModel?
     
@@ -25,12 +24,10 @@ class GameViewModel: ObservableObject {
     
     func pauseGame() {
         showPauseMenu = true
-        gameManager.pauseGame()
     }
     
     func resumeGame() {
         showPauseMenu = false
-        gameManager.resumeGame()
     }
     
     func exitToMenu() {
@@ -82,17 +79,24 @@ class GameViewModel: ObservableObject {
             closeRegionMenu()
         } else {
             selectedRegionIndex = regionIndex
-            regionMenuPosition = position
             showingRegionMenu = true
         }
     }
     
     private func handleTargetingPhaseTap(countryIndex: Int, regionIndex: Int) {
         guard !isHumanRegion(countryIndex: countryIndex),
-              !isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex),
-              humanPlayer?.availableRockets ?? 0 > 0 else { return }
+              !isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex) else { return }
         
-        selectAttackTarget(countryIndex: countryIndex, regionIndex: regionIndex)
+        // Check if this region is already targeted
+        if let existingTargetIndex = attackTargets.firstIndex(where: {
+            $0.targetCountryIndex == countryIndex && $0.targetRegionIndex == regionIndex
+        }) {
+            // Remove existing target (untarget)
+            removeAttackTarget(at: existingTargetIndex)
+        } else if humanPlayer?.availableRockets ?? 0 > 0 {
+            // Add new target (only if we have rockets available)
+            selectAttackTarget(countryIndex: countryIndex, regionIndex: regionIndex)
+        }
     }
     
     // MARK: - Economy Phase Actions
@@ -187,7 +191,7 @@ class GameViewModel: ObservableObject {
     }
     
     func isRegionTargeted(countryIndex: Int, regionIndex: Int) -> Bool {
-        attackTargets.contains { target in
+        return attackTargets.contains { target in
             target.targetCountryIndex == countryIndex && target.targetRegionIndex == regionIndex
         }
     }
@@ -318,35 +322,13 @@ class GameViewModel: ObservableObject {
         return "Buy Air Defense \(airDefenseCost)"
     }
     
-    func getRegionMenuPosition(for regionPosition: CGPoint, screenSize: CGSize) -> CGPoint {
-        let menuWidth: CGFloat = 200
-        let menuHeight: CGFloat = 120
-        let padding: CGFloat = 20
-        
-        var x = regionPosition.x - menuWidth / 2
-        var y = regionPosition.y - menuHeight - padding
-        
-        // Keep menu within screen bounds
-        if x + menuWidth > screenSize.width - padding {
-            x = screenSize.width - menuWidth - padding
-        }
-        if x < padding {
-            x = padding
-        }
-        if y < padding {
-            y = regionPosition.y + padding + 60
-        }
-        
-        return CGPoint(x: x, y: y)
-    }
-    
     // MARK: - Phase Instructions
     func getCurrentPhaseInstructions() -> String {
         switch currentPhase {
         case .economy:
-            return "Tap your regions to buy rockets (20 coins) or air defense (20 coins). Press 'End Phase' when ready."
+            return "Tap your regions to buy rockets or air defense. Press 'End Phase' when ready."
         case .targeting:
-            return "Tap enemy regions to attack with rockets. You can skip attacks. Press 'End Phase' when ready."
+            return "Tap enemy regions to attack with rockets. Press 'End Phase' after."
         case .resolution:
             return "Attacks are being resolved. Watch the results!"
         }
@@ -358,11 +340,11 @@ class GameViewModel: ObservableObject {
         
         switch result.state {
         case .victory:
-            return "Victory! You are the last nation standing!"
+            return "Victory! \nYou are the last nation standing!"
         case .defeat:
-            return "Defeat! Your nation has been destroyed."
+            return "Defeat! \nYour nation has been destroyed."
         case .draw:
-            return "Draw! All nations destroyed each other."
+            return "Draw! \nAll nations destroyed each other."
         case .maxRoundsReached:
             if let winnerIndex = result.winnerCountryIndex {
                 return "Time limit reached! \(getCountryName(at: winnerIndex)) wins with the most regions."

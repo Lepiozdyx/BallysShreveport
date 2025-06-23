@@ -168,6 +168,15 @@ struct Game: Codable, Equatable {
     }
     
     private mutating func checkGameEndConditions() -> Bool {
+        // First check if human player is defeated
+        if let humanPlayer = humanPlayer {
+            let humanCountry = countries[humanPlayer.countryIndex]
+            if humanCountry.isDestroyed {
+                gameState = .defeat
+                return true
+            }
+        }
+        
         let aliveCount = aliveCountriesCount
         
         // Check for victory/defeat
