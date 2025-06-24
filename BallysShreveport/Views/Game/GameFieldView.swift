@@ -18,6 +18,7 @@ struct GameFieldView: View {
                         viewModel: viewModel
                     )
                     .position(regionDef.position)
+                    .zIndex(getZIndexForRegion(countryIndex: countryIndex, regionIndex: regionIndex))
                 }
             }
         }
@@ -27,6 +28,22 @@ struct GameFieldView: View {
     private func getRegionIndexInCountry(regionDef: RegionDefinition) -> Int {
         let countryRegions = levelManager.getRegionsForCountry(regionDef.country)
         return countryRegions.firstIndex(where: { $0.id == regionDef.id }) ?? 0
+    }
+    
+    private func getZIndexForRegion(countryIndex: Int, regionIndex: Int) -> Double {
+        // Give higher zIndex to .usa4 and .china3 so they appear above .usa5 and .china4
+        switch (countryIndex, regionIndex) {
+        case (0, 3): // .usa4
+            return 10.0
+        case (2, 2): // .china3
+            return 10.0
+        case (0, 4): // .usa5
+            return 5.0
+        case (2, 3): // .china4
+            return 5.0
+        default:
+            return 1.0
+        }
     }
 }
 
