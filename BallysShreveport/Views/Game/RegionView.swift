@@ -23,7 +23,9 @@ struct RegionView: View {
                 .animation(.easeInOut(duration: 0.3), value: viewModel.isRegionTargeted(countryIndex: countryIndex, regionIndex: regionIndex))
                 .animation(.easeInOut(duration: 1.5), value: viewModel.isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex))
             
-            if viewModel.regionHasAirDefense(countryIndex: countryIndex, regionIndex: regionIndex) {
+            // Only show air defense icon on human player's regions
+            if viewModel.regionHasAirDefense(countryIndex: countryIndex, regionIndex: regionIndex) &&
+               viewModel.isHumanRegion(countryIndex: countryIndex) {
                 Image(.airdefense)
                     .resizable()
                     .frame(width: 12, height: 12)
