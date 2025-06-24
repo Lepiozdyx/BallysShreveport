@@ -11,9 +11,11 @@ class GameViewModel: ObservableObject {
     @Published var selectedRegionIndex: Int?
     @Published var showingRegionMenu: Bool = false
     @Published var attackTargets: [AttackTarget] = []
+    @Published var explodingRegions: Set<String> = []
     
     weak var appViewModel: AppViewModel?
     private var cancellables = Set<AnyCancellable>()
+    private var lastProcessedRound: Int = 0
     
     init(gameManager: GameManager) {
         self.gameManager = gameManager
@@ -27,10 +29,45 @@ class GameViewModel: ObservableObject {
                 self?.updateAttackTargets()
             }
             .store(in: &cancellables)
+        
+        // Observe lastTurnResolution changes to trigger explosions
+        gameManager.$lastTurnResolution
+            .sink { [weak self] resolution in
+                self?.handleTurnResolution(resolution)
+            }
+            .store(in: &cancellables)
     }
     
     private func updateAttackTargets() {
         attackTargets = gameManager.getAttackTargets()
+    }
+    
+    private func handleTurnResolution(_ resolution: TurnResolution?) {
+        guard let resolution = resolution,
+              resolution.roundNumber > lastProcessedRound else { return }
+        
+        lastProcessedRound = resolution.roundNumber
+        
+        // Trigger explosion animations for destroyed regions
+        for destroyedRegion in resolution.destroyedRegions {
+            startExplosionAnimation(for: destroyedRegion.countryIndex, regionIndex: destroyedRegion.regionIndex)
+        }
+    }
+    
+    // MARK: - Explosion Animation
+    func startExplosionAnimation(for countryIndex: Int, regionIndex: Int) {
+        let regionKey = "\(countryIndex)-\(regionIndex)"
+        explodingRegions.insert(regionKey)
+        
+        // Remove explosion after 1 second
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.explodingRegions.remove(regionKey)
+        }
+    }
+    
+    func isRegionExploding(countryIndex: Int, regionIndex: Int) -> Bool {
+        let regionKey = "\(countryIndex)-\(regionIndex)"
+        return explodingRegions.contains(regionKey)
     }
     
     // MARK: - Game Lifecycle
@@ -59,6 +96,8 @@ class GameViewModel: ObservableObject {
         selectedRegionIndex = nil
         showingRegionMenu = false
         attackTargets = []
+        explodingRegions.removeAll()
+        lastProcessedRound = 0
     }
     
     // MARK: - Phase Management

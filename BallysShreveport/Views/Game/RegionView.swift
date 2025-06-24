@@ -30,6 +30,16 @@ struct RegionView: View {
                     .opacity(regionOpacity)
                     .animation(.easeInOut(duration: 1.5), value: viewModel.isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex))
             }
+            
+            if viewModel.isRegionExploding(countryIndex: countryIndex, regionIndex: regionIndex) {
+                Image(.boom)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: regionDef.height * 0.8)
+                    .opacity(explosionOpacity)
+                    .scaleEffect(explosionScale)
+                    .animation(.easeInOut(duration: 0.5), value: viewModel.isRegionExploding(countryIndex: countryIndex, regionIndex: regionIndex))
+            }
         }
     }
     
@@ -57,6 +67,14 @@ struct RegionView: View {
         }
         
         return .white
+    }
+    
+    private var explosionOpacity: Double {
+        viewModel.isRegionExploding(countryIndex: countryIndex, regionIndex: regionIndex) ? 1.0 : 0.0
+    }
+    
+    private var explosionScale: Double {
+        viewModel.isRegionExploding(countryIndex: countryIndex, regionIndex: regionIndex) ? 1.0 : 0.5
     }
 }
 
