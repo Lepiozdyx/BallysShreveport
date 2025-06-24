@@ -20,9 +20,9 @@ struct GameUIOverlay: View {
                 
                 Spacer()
                 
-                VStack(alignment: .center, spacing: 2) {
+                HStack(alignment: .center, spacing: 2) {
                     Text(viewModel.currentPhaseDisplayName)
-                        .fontBangers(18, color: .yellow)
+                        .fontBangers(14, color: .yellow)
                     
                     Text(viewModel.getCurrentPhaseInstructions())
                         .fontBangers(14, color: .white)

@@ -9,11 +9,11 @@ enum GamePhase: String, Codable, CaseIterable {
     var displayName: String {
         switch self {
         case .economy:
-            return "Economy Phase"
+            return "Phase 1"
         case .targeting:
-            return "Targeting Phase"
+            return "Targeting"
         case .resolution:
-            return "Resolution Phase"
+            return "Resolution"
         }
     }
 }

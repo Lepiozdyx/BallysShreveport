@@ -10,11 +10,11 @@ struct GameUIBottomPanel: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(viewModel.getRoundDisplayText())")
-                        .fontBangers(18)
+                        .fontBangers(12)
                     Text("Regions: \(viewModel.humanCountry?.aliveRegionsCount ?? 0)")
-                        .fontBangers(14)
+                        .fontBangers(12)
                     Text("Income: \(viewModel.humanCountry?.totalIncome ?? 0)")
-                        .fontBangers(14)
+                        .fontBangers(12, color: .yellow)
                 }
                 
                 Spacer()

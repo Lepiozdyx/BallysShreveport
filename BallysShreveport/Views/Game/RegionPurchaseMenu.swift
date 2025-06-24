@@ -11,38 +11,76 @@ struct RegionPurchaseMenu: View {
                     viewModel.closeRegionMenu()
                 }
             
-            VStack(spacing: 16) {
-                Button {
-                    viewModel.buyRocket()
-                } label: {
-                    ActionView(
-                        width: 180,
-                        height: 50,
-                        text: viewModel.getRocketButtonText(),
-                        textSize: 18
-                    )
+            HStack(spacing: 16) {
+                VStack {
+                    Image(.button2)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100)
+                        .overlay {
+                            VStack(spacing: 0) {
+                                Text("air defense")
+                                    .fontBangers(14)
+                                
+                                Image(.airdefense)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .padding(8)
+                            }
+                            .padding()
+                        }
+                    
+                    Button {
+                        viewModel.buyAirDefense()
+                    } label: {
+                        ActionView(
+                            width: 180,
+                            height: 60,
+                            text: viewModel.getAirDefenseButtonText(),
+                            textSize: 18
+                        )
+                    }
+                    .disabled(!viewModel.canBuyAirDefense(for: viewModel.selectedRegionIndex ?? 0))
+                    .opacity(viewModel.canBuyAirDefense(for: viewModel.selectedRegionIndex ?? 0) ? 1.0 : 0.6)
                 }
-                .disabled(!viewModel.canBuyRocket())
-                .opacity(viewModel.canBuyRocket() ? 1.0 : 0.6)
                 
-                Button {
-                    viewModel.buyAirDefense()
-                } label: {
-                    ActionView(
-                        width: 180,
-                        height: 50,
-                        text: viewModel.getAirDefenseButtonText(),
-                        textSize: 18
-                    )
+                VStack {
+                    Image(.button2)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100)
+                        .overlay {
+                            VStack(spacing: 0) {
+                                Text("nuclear \nmissile")
+                                    .fontBangers(14)
+                                
+                                Image(.rocket)
+                                    .resizable()
+                                    .scaledToFit()
+                            }
+                            .padding()
+                        }
+                    
+                    Button {
+                        viewModel.buyRocket()
+                    } label: {
+                        ActionView(
+                            width: 180,
+                            height: 60,
+                            text: viewModel.getRocketButtonText(),
+                            textSize: 18
+                        )
+                    }
+                    .disabled(!viewModel.canBuyRocket())
+                    .opacity(viewModel.canBuyRocket() ? 1.0 : 0.6)
                 }
-                .disabled(!viewModel.canBuyAirDefense(for: viewModel.selectedRegionIndex ?? 0))
-                .opacity(viewModel.canBuyAirDefense(for: viewModel.selectedRegionIndex ?? 0) ? 1.0 : 0.6)
             }
             .padding(.vertical, 60)
             .padding(.horizontal)
             .background(
                 Image(.frame1)
                     .resizable()
+                    .opacity(0.5)
                     .overlay(alignment: .topTrailing) {
                         Button {
                             viewModel.closeRegionMenu()
