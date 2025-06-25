@@ -163,8 +163,8 @@ class AISystem {
         }
         
         // Higher priority if under threat (enemies have many rockets)
-        let totalEnemyRockets = allCountries.enumerated().compactMap { (index, _) in
-            if index == country.countryIndex { return nil }
+        let totalEnemyRockets = allCountries.compactMap { otherCountry in
+            if otherCountry.countryIndex == country.countryIndex { return nil }
             return 1 // Assume enemies might have rockets
         }.reduce(0, +)
         

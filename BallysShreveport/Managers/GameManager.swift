@@ -38,11 +38,19 @@ class GameManager: ObservableObject {
     // MARK: - AI Systems Setup
     private func initializeAISystems() {
         aiSystems.removeAll()
+        print("=== Initializing AI Systems ===")
+        print("Total players: \(game.players.count)")
         for player in game.players {
+            print("Player: type=\(player.type), countryIndex=\(player.countryIndex)")
             if player.isAI {
+                print("Creating AI for countryIndex: \(player.countryIndex)")
                 aiSystems[player.countryIndex] = AISystem.createForPlayer(at: player.countryIndex)
+                print("AI created successfully: \(aiSystems[player.countryIndex] != nil)")
             }
         }
+        print("Total AI systems created: \(aiSystems.count)")
+        print("AI system keys: \(Array(aiSystems.keys).sorted())")
+        print("=== AI Systems Init Complete ===")
     }
     
     // MARK: - Phase Management
@@ -234,12 +242,29 @@ class GameManager: ObservableObject {
     
     // MARK: - AI Execution
     private func executeAIPurchases() {
+        print("=== AI Purchases Phase ===")
+        print("AI players count: \(game.aiPlayers.count)")
         for player in game.aiPlayers {
-            guard let aiSystem = aiSystems[player.countryIndex],
-                  let playerIndex = game.players.firstIndex(where: { $0.id == player.id }),
-                  let country = game.countries.first(where: { $0.countryIndex == player.countryIndex }) else { continue }
+            print("Processing AI player countryIndex: \(player.countryIndex), coins: \(player.coins)")
             
+            guard let aiSystem = aiSystems[player.countryIndex] else {
+                print("ERROR: No AI system found for countryIndex: \(player.countryIndex)")
+                continue
+            }
+            
+            guard let playerIndex = game.players.firstIndex(where: { $0.id == player.id }) else {
+                print("ERROR: Player index not found for countryIndex: \(player.countryIndex)")
+                continue
+            }
+            
+            guard let country = game.countries.first(where: { $0.countryIndex == player.countryIndex }) else {
+                print("ERROR: Country not found for countryIndex: \(player.countryIndex)")
+                continue
+            }
+            
+            print("AI system found, making decisions for countryIndex: \(player.countryIndex)")
             let decisions = aiSystem.makePurchaseDecisions(for: player, country: country, allCountries: game.countries)
+            print("AI decisions count: \(decisions.count) for countryIndex: \(player.countryIndex)")
             
             // Execute AI decisions
             for decision in decisions {
@@ -247,12 +272,14 @@ class GameManager: ObservableObject {
                 case .buyRocket(_):
                     if game.players[playerIndex].buyRocket() {
                         game.playerActions[player.id]?.addPurchaseAction(decision)
+                        print("AI bought rocket for countryIndex: \(player.countryIndex)")
                     }
                 case .buyAirDefense(let regionIndex):
                     if game.players[playerIndex].buyAirDefense(),
                        let countryArrayIndex = game.countries.firstIndex(where: { $0.countryIndex == player.countryIndex }) {
                         if game.countries[countryArrayIndex].addAirDefenseToRegion(at: regionIndex) {
                             game.playerActions[player.id]?.addPurchaseAction(decision)
+                            print("AI bought air defense for countryIndex: \(player.countryIndex), region: \(regionIndex)")
                         }
                     }
                 case .none:
@@ -260,23 +287,33 @@ class GameManager: ObservableObject {
                 }
             }
         }
+        print("=== AI Purchases Complete ===")
     }
     
     private func executeAITargeting() {
+        print("=== AI Targeting Phase ===")
         for player in game.aiPlayers {
+            print("Processing AI targeting for countryIndex: \(player.countryIndex), rockets: \(player.availableRockets)")
+            
             guard let aiSystem = aiSystems[player.countryIndex],
                   let playerIndex = game.players.firstIndex(where: { $0.id == player.id }),
-                  let country = game.countries.first(where: { $0.countryIndex == player.countryIndex }) else { continue }
+                  let country = game.countries.first(where: { $0.countryIndex == player.countryIndex }) else {
+                print("ERROR: Failed to get AI system/player/country for countryIndex: \(player.countryIndex)")
+                continue
+            }
             
             let targets = aiSystem.selectAttackTargets(for: player, country: country, allCountries: game.countries)
+            print("AI selected \(targets.count) targets for countryIndex: \(player.countryIndex)")
             
             // Execute AI targeting
             for target in targets {
                 if game.players[playerIndex].useRocket() {
                     game.playerActions[player.id]?.addAttackTarget(target)
+                    print("AI targeted countryIndex: \(target.targetCountryIndex), region: \(target.targetRegionIndex)")
                 }
             }
         }
+        print("=== AI Targeting Complete ===")
     }
     
     // MARK: - Game State Queries

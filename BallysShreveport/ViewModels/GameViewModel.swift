@@ -109,10 +109,17 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Phase Management
     func endCurrentPhase() {
+        print("=== Ending Phase ===")
+        print("Current phase: \(currentPhase)")
+        print("Player rockets: \(humanPlayer?.availableRockets ?? 0)")
+        print("Player coins: \(humanPlayer?.coins ?? 0)")
+        
         gameManager.endCurrentPhase()
         closeRegionMenu()
         updateAttackTargets()
         checkForGameEnd()
+        
+        print("New phase: \(currentPhase)")
     }
     
     private func checkForGameEnd() {
@@ -127,12 +134,22 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Region Interaction
     func handleRegionTap(countryIndex: Int, regionIndex: Int, position: CGPoint) {
+        print("=== Region Tap ===")
+        print("Tapped countryIndex: \(countryIndex), regionIndex: \(regionIndex)")
+        print("Current phase: \(currentPhase)")
+        
         switch currentPhase {
         case .economy:
+            print("Economy phase tap")
             handleEconomyPhaseTap(countryIndex: countryIndex, regionIndex: regionIndex, position: position)
         case .targeting:
+            print("Targeting phase tap")
+            print("Is human region: \(isHumanRegion(countryIndex: countryIndex))")
+            print("Is region destroyed: \(isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex))")
+            print("Available rockets: \(humanPlayer?.availableRockets ?? 0)")
             handleTargetingPhaseTap(countryIndex: countryIndex, regionIndex: regionIndex)
         case .resolution:
+            print("Resolution phase tap - no interaction")
             break // No interaction during resolution
         }
     }
@@ -150,29 +167,48 @@ class GameViewModel: ObservableObject {
     }
     
     private func handleTargetingPhaseTap(countryIndex: Int, regionIndex: Int) {
-        guard !isHumanRegion(countryIndex: countryIndex),
-              !isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex) else { return }
+        print("=== Targeting Phase Tap ===")
+        print("Target countryIndex: \(countryIndex), regionIndex: \(regionIndex)")
+        
+        guard !isHumanRegion(countryIndex: countryIndex) else {
+            print("Cannot target own region - this is human region")
+            return
+        }
+        
+        guard !isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex) else {
+            print("Cannot target destroyed region")
+            return
+        }
         
         // Check if this region is already targeted
         if let existingTargetIndex = attackTargets.firstIndex(where: {
             $0.targetCountryIndex == countryIndex && $0.targetRegionIndex == regionIndex
         }) {
+            print("Region already targeted - removing target")
             // Remove existing target (untarget)
             removeAttackTarget(at: existingTargetIndex)
         } else if humanPlayer?.availableRockets ?? 0 > 0 {
+            print("Adding new target - rockets available: \(humanPlayer?.availableRockets ?? 0)")
             // Add new target (only if we have rockets available)
             selectAttackTarget(countryIndex: countryIndex, regionIndex: regionIndex)
+        } else {
+            print("Cannot add target - no rockets available")
         }
     }
     
     // MARK: - Economy Phase Actions
     func buyRocket() {
         guard let regionIndex = selectedRegionIndex,
-              canBuyRocket() else { return }
+              canBuyRocket() else {
+            print("Cannot buy rocket - regionIndex: \(selectedRegionIndex ?? -1), canBuy: \(canBuyRocket())")
+            return
+        }
         
+        print("Buying rocket for region: \(regionIndex)")
         gameManager.buyRocketForRegion(regionIndex)
         updateAttackTargets()
         closeRegionMenu()
+        print("Rocket purchased. Player rockets: \(humanPlayer?.availableRockets ?? 0)")
     }
     
     func buyAirDefense() {
@@ -244,14 +280,38 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Region State Queries
     func isRegionDestroyed(countryIndex: Int, regionIndex: Int) -> Bool {
-        guard countryIndex < currentGame.countries.count,
-              let country = currentGame.countries.first(where: { $0.countryIndex == countryIndex }),
-              regionIndex < country.regions.count else { return true }
-        return country.regions[regionIndex].isDestroyed
+        print("=== isRegionDestroyed Check ===")
+        print("Checking countryIndex: \(countryIndex), regionIndex: \(regionIndex)")
+        print("Total countries in game: \(currentGame.countries.count)")
+        
+        for (index, country) in currentGame.countries.enumerated() {
+            print("Country[\(index)]: countryIndex=\(country.countryIndex), name=\(country.name), regions=\(country.regions.count)")
+        }
+        
+        guard let country = currentGame.countries.first(where: { $0.countryIndex == countryIndex }) else {
+            print("ERROR: Country not found for countryIndex: \(countryIndex)")
+            return true
+        }
+        
+        print("Found country: \(country.name) with \(country.regions.count) regions")
+        
+        guard regionIndex < country.regions.count else {
+            print("ERROR: regionIndex \(regionIndex) >= regions count \(country.regions.count)")
+            return true
+        }
+        
+        let isDestroyed = country.regions[regionIndex].isDestroyed
+        print("Region[\(regionIndex)] isDestroyed: \(isDestroyed)")
+        print("=== isRegionDestroyed Check Complete ===")
+        
+        return isDestroyed
     }
     
     func isHumanRegion(countryIndex: Int) -> Bool {
-        humanPlayer?.countryIndex == countryIndex
+        let humanCountryIndex = humanPlayer?.countryIndex
+        let isHuman = humanCountryIndex == countryIndex
+        print("isHumanRegion check: countryIndex=\(countryIndex), humanCountryIndex=\(humanCountryIndex ?? -1), isHuman=\(isHuman)")
+        return isHuman
     }
     
     func regionHasAirDefense(countryIndex: Int, regionIndex: Int) -> Bool {
@@ -267,14 +327,26 @@ class GameViewModel: ObservableObject {
     }
     
     func canInteractWithRegion(countryIndex: Int, regionIndex: Int) -> Bool {
-        guard !isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex) else { return false }
+        let destroyed = isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex)
+        
+        guard !destroyed else {
+            print("Cannot interact - region destroyed: countryIndex=\(countryIndex), regionIndex=\(regionIndex)")
+            return false
+        }
         
         switch currentPhase {
         case .economy:
-            return isHumanRegion(countryIndex: countryIndex)
+            let canInteract = isHumanRegion(countryIndex: countryIndex)
+            print("Economy phase - can interact with countryIndex=\(countryIndex): \(canInteract)")
+            return canInteract
         case .targeting:
-            return !isHumanRegion(countryIndex: countryIndex) && (humanPlayer?.availableRockets ?? 0) > 0
+            let isHuman = isHumanRegion(countryIndex: countryIndex)
+            let hasRockets = (humanPlayer?.availableRockets ?? 0) > 0
+            let canInteract = !isHuman && hasRockets
+            print("Targeting phase - countryIndex=\(countryIndex), isHuman=\(isHuman), hasRockets=\(hasRockets), canInteract=\(canInteract)")
+            return canInteract
         case .resolution:
+            print("Resolution phase - no interaction allowed")
             return false
         }
     }

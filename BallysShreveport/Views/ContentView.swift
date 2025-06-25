@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  BallysShreveport
-//
-//  Created by Alex on 20.06.2025.
-//
-
 import SwiftUI
 
 struct ContentView: View {
