@@ -3,9 +3,15 @@ import Foundation
 
 @MainActor
 class AppViewModel: ObservableObject {
+    
+    enum Difficulty {
+        case novice, strategist, agressor
+    }
+    
     @Published var currentScreen: Navigation = .menu
     @Published var coins: Int = 0
     @Published var isLoading: Bool = false
+    @Published var difficulty: Difficulty = .strategist
     
     private let coinsKey = "bally_player_coins"
     
@@ -20,12 +26,20 @@ class AppViewModel: ObservableObject {
         }
     }
     
-    func navigateToGame() {
-        navigateTo(.game)
-    }
-    
     func navigateBackToMenu() {
         navigateTo(.menu)
+    }
+    
+    func navigateToModeSelection() {
+        navigateTo(.modeSelection)
+    }
+    
+    func navigateToAIModeSetup() {
+        navigateTo(.aiModeSetup)
+    }
+    
+    func navigateToGame() {
+        navigateTo(.game)
     }
     
     // MARK: - Player Data Management
