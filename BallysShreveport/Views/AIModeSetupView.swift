@@ -52,7 +52,8 @@ struct AIModeSetupView: View {
                     
                     HStack(spacing: 30) {
                         Button {
-                            
+                            appViewModel.opponentCount = 1
+                            appViewModel.navigateToGame()
                         } label: {
                             ActionView(
                                 imageResource: .button2,
@@ -64,7 +65,8 @@ struct AIModeSetupView: View {
                         }
                         
                         Button {
-                            
+                            appViewModel.opponentCount = 2
+                            appViewModel.navigateToGame()
                         } label: {
                             ActionView(
                                 imageResource: .button2,
@@ -76,7 +78,8 @@ struct AIModeSetupView: View {
                         }
                         
                         Button {
-                            
+                            appViewModel.opponentCount = 3
+                            appViewModel.navigateToGame()
                         } label: {
                             ActionView(
                                 imageResource: .button2,

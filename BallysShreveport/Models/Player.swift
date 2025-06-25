@@ -81,4 +81,29 @@ extension Player {
             Player(type: .ai, countryIndex: 3)
         ]
     }
+    
+    static func createPlayers(for opponentCount: Int) -> [Player] {
+        switch opponentCount {
+        case 1:
+            return [
+                Player(type: .human, countryIndex: 0),
+                Player(type: .ai, countryIndex: 3)
+            ]
+        case 2:
+            return [
+                Player(type: .human, countryIndex: 0),
+                Player(type: .ai, countryIndex: 1),
+                Player(type: .ai, countryIndex: 3)
+            ]
+        case 3:
+            return [
+                Player(type: .human, countryIndex: 0),
+                Player(type: .ai, countryIndex: 1),
+                Player(type: .ai, countryIndex: 2),
+                Player(type: .ai, countryIndex: 3)
+            ]
+        default:
+            return createPlayers()
+        }
+    }
 }

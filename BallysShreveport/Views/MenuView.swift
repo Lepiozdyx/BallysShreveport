@@ -41,7 +41,7 @@ struct MenuView: View {
                 
                 HStack(spacing: 20) {
                     Button {
-                        appViewModel.navigateTo(.game)
+                        appViewModel.navigateTo(.modeSelection)
                     } label: {
                         ActionView(width: 260, height: 90, text: "play", textSize: 40)
                     }

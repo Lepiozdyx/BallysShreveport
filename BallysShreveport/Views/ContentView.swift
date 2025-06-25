@@ -8,14 +8,51 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var appViewModel = AppViewModel()
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ZStack {
+            switch appViewModel.currentScreen {
+            case .menu:
+                MenuView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
+            case .modeSelection:
+                ModeSelectionView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
+            case .aiModeSetup:
+                AIModeSetupView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
+            case .game:
+                GameView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
+            case .settings:
+                // Temp
+                MenuView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
+            case .shop:
+                // Temp
+                MenuView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
+            case .achievements:
+                // Temp
+                MenuView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+            }
         }
-        .padding()
+        .animation(.easeInOut(duration: 0.3), value: appViewModel.currentScreen)
     }
 }
 

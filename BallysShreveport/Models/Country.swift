@@ -66,4 +66,29 @@ extension Country {
             Country(name: "North Korea", countryIndex: 3)
         ]
     }
+    
+    static func createCountries(for opponentCount: Int) -> [Country] {
+        switch opponentCount {
+        case 1:
+            return [
+                Country(name: "USA", countryIndex: 0),
+                Country(name: "North Korea", countryIndex: 3)
+            ]
+        case 2:
+            return [
+                Country(name: "USA", countryIndex: 0),
+                Country(name: "Iran", countryIndex: 1),
+                Country(name: "North Korea", countryIndex: 3)
+            ]
+        case 3:
+            return [
+                Country(name: "USA", countryIndex: 0),
+                Country(name: "Iran", countryIndex: 1),
+                Country(name: "China", countryIndex: 2),
+                Country(name: "North Korea", countryIndex: 3)
+            ]
+        default:
+            return createDefaultCountries()
+        }
+    }
 }

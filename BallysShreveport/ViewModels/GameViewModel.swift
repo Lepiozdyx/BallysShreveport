@@ -16,9 +16,16 @@ class GameViewModel: ObservableObject {
     weak var appViewModel: AppViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var lastProcessedRound: Int = 0
+    private var opponentCount: Int = 3
     
     init(gameManager: GameManager) {
         self.gameManager = gameManager
+        setupObservers()
+    }
+    
+    init(opponentCount: Int) {
+        self.opponentCount = opponentCount
+        self.gameManager = GameManager(opponentCount: opponentCount)
         setupObservers()
     }
     
@@ -72,7 +79,7 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Game Lifecycle
     func startNewGame() {
-        gameManager.startNewGame()
+        gameManager.startNewGame(opponentCount: opponentCount)
         resetGameUI()
         updateAttackTargets()
     }
@@ -237,7 +244,10 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Region State Queries
     func isRegionDestroyed(countryIndex: Int, regionIndex: Int) -> Bool {
-        gameManager.isRegionDestroyed(countryIndex: countryIndex, regionIndex: regionIndex)
+        guard countryIndex < currentGame.countries.count,
+              let country = currentGame.countries.first(where: { $0.countryIndex == countryIndex }),
+              regionIndex < country.regions.count else { return true }
+        return country.regions[regionIndex].isDestroyed
     }
     
     func isHumanRegion(countryIndex: Int) -> Bool {
@@ -245,9 +255,9 @@ class GameViewModel: ObservableObject {
     }
     
     func regionHasAirDefense(countryIndex: Int, regionIndex: Int) -> Bool {
-        guard countryIndex < currentGame.countries.count,
-              regionIndex < currentGame.countries[countryIndex].regions.count else { return false }
-        return currentGame.countries[countryIndex].regions[regionIndex].hasAirDefense
+        guard let country = currentGame.countries.first(where: { $0.countryIndex == countryIndex }),
+              regionIndex < country.regions.count else { return false }
+        return country.regions[regionIndex].hasAirDefense
     }
     
     func isRegionTargeted(countryIndex: Int, regionIndex: Int) -> Bool {
@@ -284,11 +294,11 @@ class GameViewModel: ObservableObject {
     }
     
     func getRegionPosition(countryIndex: Int, regionIndex: Int) -> CGPoint {
-        guard countryIndex < currentGame.countries.count,
-              regionIndex < currentGame.countries[countryIndex].regions.count else {
+        guard let country = currentGame.countries.first(where: { $0.countryIndex == countryIndex }),
+              regionIndex < country.regions.count else {
             return .zero
         }
-        return currentGame.countries[countryIndex].regions[regionIndex].position
+        return country.regions[regionIndex].position
     }
     
     func getRegionShape(countryIndex: Int, regionIndex: Int) -> String {
@@ -319,18 +329,18 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Country Information
     func getCountryName(at index: Int) -> String {
-        guard index < currentGame.countries.count else { return "Unknown" }
-        return currentGame.countries[index].name
+        guard let country = currentGame.countries.first(where: { $0.countryIndex == index }) else { return "Unknown" }
+        return country.name
     }
     
     func getCountryRegionCount(at index: Int) -> Int {
-        guard index < currentGame.countries.count else { return 0 }
-        return currentGame.countries[index].aliveRegionsCount
+        guard let country = currentGame.countries.first(where: { $0.countryIndex == index }) else { return 0 }
+        return country.aliveRegionsCount
     }
     
     func isCountryDestroyed(at index: Int) -> Bool {
-        guard index < currentGame.countries.count else { return true }
-        return currentGame.countries[index].isDestroyed
+        guard let country = currentGame.countries.first(where: { $0.countryIndex == index }) else { return true }
+        return country.isDestroyed
     }
     
     // MARK: - Player Statistics
@@ -428,6 +438,14 @@ class GameViewModel: ObservableObject {
     // MARK: - Setup
     func setupWith(appViewModel: AppViewModel) {
         self.appViewModel = appViewModel
+        
+        // Update opponent count if it has changed
+        if self.opponentCount != appViewModel.opponentCount {
+            self.opponentCount = appViewModel.opponentCount
+            self.gameManager = GameManager(opponentCount: opponentCount)
+            setupObservers()
+        }
+        
         updateAttackTargets()
     }
 }

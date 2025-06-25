@@ -12,6 +12,7 @@ class AppViewModel: ObservableObject {
     @Published var coins: Int = 0
     @Published var isLoading: Bool = false
     @Published var difficulty: Difficulty = .strategist
+    @Published var opponentCount: Int = 3
     
     private let coinsKey = "bally_player_coins"
     

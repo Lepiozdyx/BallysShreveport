@@ -11,18 +11,36 @@ struct GameFieldView: View {
                     let countryIndex = regionDef.country.countryIndex
                     let regionIndex = getRegionIndexInCountry(regionDef: regionDef)
                     
-                    RegionView(
-                        regionDef: regionDef,
-                        countryIndex: countryIndex,
-                        regionIndex: regionIndex,
-                        viewModel: viewModel
-                    )
-                    .position(regionDef.position)
-                    .zIndex(getZIndexForRegion(countryIndex: countryIndex, regionIndex: regionIndex))
+                    if countryExists(countryIndex: countryIndex) {
+                        RegionView(
+                            regionDef: regionDef,
+                            countryIndex: countryIndex,
+                            regionIndex: regionIndex,
+                            viewModel: viewModel
+                        )
+                        .position(regionDef.position)
+                        .zIndex(getZIndexForRegion(countryIndex: countryIndex, regionIndex: regionIndex))
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            setupLevelForCurrentGame()
+        }
+        .onChange(of: viewModel.currentGame.countries.count) { _ in
+            setupLevelForCurrentGame()
+        }
+    }
+    
+    private func setupLevelForCurrentGame() {
+        let countryCount = viewModel.currentGame.countries.count
+        let opponentCount = countryCount - 1 // Subtract 1 for human player
+        levelManager.setLevelForOpponentCount(opponentCount)
+    }
+    
+    private func countryExists(countryIndex: Int) -> Bool {
+        return viewModel.currentGame.countries.contains { $0.countryIndex == countryIndex }
     }
     
     private func getRegionIndexInCountry(regionDef: RegionDefinition) -> Int {
@@ -31,7 +49,6 @@ struct GameFieldView: View {
     }
     
     private func getZIndexForRegion(countryIndex: Int, regionIndex: Int) -> Double {
-        // Give higher zIndex to .usa4 and .china3 so they appear above .usa5 and .china4
         switch (countryIndex, regionIndex) {
         case (0, 3): // .usa4
             return 10.0

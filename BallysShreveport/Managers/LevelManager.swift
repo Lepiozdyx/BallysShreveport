@@ -103,6 +103,19 @@ class LevelManager: ObservableObject {
         currentLevel = level
     }
     
+    func setLevelForOpponentCount(_ opponentCount: Int) {
+        switch opponentCount {
+        case 1:
+            currentLevel = createLevelWith1Opponent()
+        case 2:
+            currentLevel = createLevelWith2Opponents()
+        case 3:
+            currentLevel = createLevelWith3Opponents()
+        default:
+            currentLevel = createLevelWith3Opponents()
+        }
+    }
+    
     func addCustomLevel(_ level: GameLevel) {
         availableLevels.append(level)
     }

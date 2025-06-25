@@ -17,9 +17,20 @@ class GameManager: ObservableObject {
         initializeAISystems()
     }
     
+    init(opponentCount: Int) {
+        self.game = Game(opponentCount: opponentCount)
+        initializeAISystems()
+    }
+    
     // MARK: - Game Lifecycle
     func startNewGame() {
         game = Game()
+        initializeAISystems()
+        game.startGame()
+    }
+    
+    func startNewGame(opponentCount: Int) {
+        game = Game(opponentCount: opponentCount)
         initializeAISystems()
         game.startGame()
     }
@@ -103,8 +114,8 @@ class GameManager: ObservableObject {
     }
     
     private func checkForPlayerDefeat() -> Bool {
-        guard let humanPlayer = game.humanPlayer else { return false }
-        let humanCountry = game.countries[humanPlayer.countryIndex]
+        guard let humanPlayer = game.humanPlayer,
+              let humanCountry = game.countries.first(where: { $0.countryIndex == humanPlayer.countryIndex }) else { return false }
         
         if humanCountry.isDestroyed {
             game.gameState = .defeat
@@ -166,10 +177,11 @@ class GameManager: ObservableObject {
     func buyAirDefenseForRegion(_ regionIndex: Int) {
         guard let humanPlayer = game.humanPlayer,
               let playerIndex = game.players.firstIndex(where: { $0.id == humanPlayer.id }),
-              let humanCountryIndex = game.humanPlayer?.countryIndex else { return }
+              let humanCountryIndex = game.humanPlayer?.countryIndex,
+              let countryArrayIndex = game.countries.firstIndex(where: { $0.countryIndex == humanCountryIndex }) else { return }
         
         if game.players[playerIndex].buyAirDefense() &&
-           game.countries[humanCountryIndex].addAirDefenseToRegion(at: regionIndex) {
+           game.countries[countryArrayIndex].addAirDefenseToRegion(at: regionIndex) {
             let action = GameAction.buyAirDefense(regionIndex: regionIndex)
             game.playerActions[humanPlayer.id]?.addPurchaseAction(action)
             objectWillChange.send()
@@ -224,9 +236,9 @@ class GameManager: ObservableObject {
     private func executeAIPurchases() {
         for player in game.aiPlayers {
             guard let aiSystem = aiSystems[player.countryIndex],
-                  let playerIndex = game.players.firstIndex(where: { $0.id == player.id }) else { continue }
+                  let playerIndex = game.players.firstIndex(where: { $0.id == player.id }),
+                  let country = game.countries.first(where: { $0.countryIndex == player.countryIndex }) else { continue }
             
-            let country = game.countries[player.countryIndex]
             let decisions = aiSystem.makePurchaseDecisions(for: player, country: country, allCountries: game.countries)
             
             // Execute AI decisions
@@ -237,9 +249,11 @@ class GameManager: ObservableObject {
                         game.playerActions[player.id]?.addPurchaseAction(decision)
                     }
                 case .buyAirDefense(let regionIndex):
-                    if game.players[playerIndex].buyAirDefense() &&
-                       game.countries[player.countryIndex].addAirDefenseToRegion(at: regionIndex) {
-                        game.playerActions[player.id]?.addPurchaseAction(decision)
+                    if game.players[playerIndex].buyAirDefense(),
+                       let countryArrayIndex = game.countries.firstIndex(where: { $0.countryIndex == player.countryIndex }) {
+                        if game.countries[countryArrayIndex].addAirDefenseToRegion(at: regionIndex) {
+                            game.playerActions[player.id]?.addPurchaseAction(decision)
+                        }
                     }
                 case .none:
                     break
@@ -251,9 +265,9 @@ class GameManager: ObservableObject {
     private func executeAITargeting() {
         for player in game.aiPlayers {
             guard let aiSystem = aiSystems[player.countryIndex],
-                  let playerIndex = game.players.firstIndex(where: { $0.id == player.id }) else { continue }
+                  let playerIndex = game.players.firstIndex(where: { $0.id == player.id }),
+                  let country = game.countries.first(where: { $0.countryIndex == player.countryIndex }) else { continue }
             
-            let country = game.countries[player.countryIndex]
             let targets = aiSystem.selectAttackTargets(for: player, country: country, allCountries: game.countries)
             
             // Execute AI targeting
@@ -272,7 +286,7 @@ class GameManager: ObservableObject {
     
     var humanCountry: Country? {
         guard let humanPlayer = game.humanPlayer else { return nil }
-        return game.countries[humanPlayer.countryIndex]
+        return game.countries.first(where: { $0.countryIndex == humanPlayer.countryIndex })
     }
     
     var currentPhaseDisplayName: String {
@@ -306,10 +320,10 @@ class GameManager: ObservableObject {
     
     func canBuyAirDefense(for regionIndex: Int) -> Bool {
         guard let humanPlayer = game.humanPlayer,
-              let humanCountryIndex = game.humanPlayer?.countryIndex else { return false }
+              let humanCountryIndex = game.humanPlayer?.countryIndex,
+              let country = game.countries.first(where: { $0.countryIndex == humanCountryIndex }) else { return false }
         
-        return humanPlayer.canBuyAirDefense &&
-               game.countries[humanCountryIndex].canBuyAirDefense(at: regionIndex)
+        return humanPlayer.canBuyAirDefense && country.canBuyAirDefense(at: regionIndex)
     }
     
     func getAttackTargets() -> [AttackTarget] {
@@ -318,6 +332,8 @@ class GameManager: ObservableObject {
     }
     
     func isRegionDestroyed(countryIndex: Int, regionIndex: Int) -> Bool {
-        return game.countries[countryIndex].regions[regionIndex].isDestroyed
+        guard let country = game.countries.first(where: { $0.countryIndex == countryIndex }),
+              regionIndex < country.regions.count else { return true }
+        return country.regions[regionIndex].isDestroyed
     }
 }

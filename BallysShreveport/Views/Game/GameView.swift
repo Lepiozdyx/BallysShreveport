@@ -5,8 +5,7 @@ struct GameView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
     
     init() {
-        let gameManager = GameManager()
-        self._gameViewModel = StateObject(wrappedValue: GameViewModel(gameManager: gameManager))
+        self._gameViewModel = StateObject(wrappedValue: GameViewModel(opponentCount: 3))
     }
     
     var body: some View {

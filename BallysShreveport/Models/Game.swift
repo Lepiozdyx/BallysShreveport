@@ -63,6 +63,13 @@ struct Game: Codable, Equatable {
         self.initializePlayerActions()
     }
     
+    init(opponentCount: Int) {
+        self.maxRounds = 50
+        self.countries = Country.createCountries(for: opponentCount)
+        self.players = Player.createPlayers(for: opponentCount)
+        self.initializePlayerActions()
+    }
+    
     private mutating func initializePlayerActions() {
         for player in players {
             playerActions[player.id] = PlayerTurnActions(playerId: player.id)
@@ -127,8 +134,12 @@ struct Game: Codable, Equatable {
     private mutating func distributeInitialIncome() {
         for i in 0..<players.count {
             let countryIndex = players[i].countryIndex
-            let income = countries[countryIndex].totalIncome
-            players[i].addIncome(income)
+            
+            // Find country safely
+            if let country = countries.first(where: { $0.countryIndex == countryIndex }) {
+                let income = country.totalIncome
+                players[i].addIncome(income)
+            }
         }
     }
     
@@ -147,14 +158,22 @@ struct Game: Codable, Equatable {
             let targetCountryIndex = attack.targetCountryIndex
             let targetRegionIndex = attack.targetRegionIndex
             
+            // Find target country safely
+            guard let targetCountryArrayIndex = countries.firstIndex(where: { $0.countryIndex == targetCountryIndex }) else {
+                // Target country doesn't exist, treat as blocked attack
+                let result = AttackResult(attack: attack, wasBlocked: true)
+                attackResults.append(result)
+                continue
+            }
+            
             // Check if target has air defense
-            let wasBlocked = countries[targetCountryIndex].consumeAirDefense(at: targetRegionIndex)
+            let wasBlocked = countries[targetCountryArrayIndex].consumeAirDefense(at: targetRegionIndex)
             let result = AttackResult(attack: attack, wasBlocked: wasBlocked)
             attackResults.append(result)
             
             // If not blocked, destroy the region
             if !wasBlocked {
-                countries[targetCountryIndex].destroyRegion(at: targetRegionIndex)
+                countries[targetCountryArrayIndex].destroyRegion(at: targetRegionIndex)
                 destroyedRegions.append(DestroyedRegion(countryIndex: targetCountryIndex, regionIndex: targetRegionIndex))
             }
         }
@@ -169,8 +188,8 @@ struct Game: Codable, Equatable {
     
     private mutating func checkGameEndConditions() -> Bool {
         // First check if human player is defeated
-        if let humanPlayer = humanPlayer {
-            let humanCountry = countries[humanPlayer.countryIndex]
+        if let humanPlayer = humanPlayer,
+           let humanCountry = countries.first(where: { $0.countryIndex == humanPlayer.countryIndex }) {
             if humanCountry.isDestroyed {
                 gameState = .defeat
                 return true
