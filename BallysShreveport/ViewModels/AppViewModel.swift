@@ -1,11 +1,14 @@
 import SwiftUI
-import Foundation
 
 @MainActor
 class AppViewModel: ObservableObject {
-    
     enum Difficulty {
         case novice, strategist, agressor
+    }
+    
+    enum GameMode {
+        case vsAI
+        case campaign
     }
     
     @Published var currentScreen: Navigation = .menu
@@ -13,6 +16,8 @@ class AppViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var difficulty: Difficulty = .strategist
     @Published var opponentCount: Int = 3
+    @Published var currentGameMode: GameMode = .vsAI
+    @Published var campaignManager = CampaignManager()
     
     private let coinsKey = "bally_player_coins"
     
@@ -36,10 +41,24 @@ class AppViewModel: ObservableObject {
     }
     
     func navigateToAIModeSetup() {
+        currentGameMode = .vsAI
         navigateTo(.aiModeSetup)
     }
     
     func navigateToGame() {
+        currentGameMode = .vsAI
+        navigateTo(.game)
+    }
+    
+    func navigateToCampaignLevelSelection() {
+        currentGameMode = .campaign
+        navigateTo(.campaignLevelSelection)
+    }
+    
+    func navigateToCampaignGame(level: Int) {
+        currentGameMode = .campaign
+        campaignManager.selectLevel(level)
+        opponentCount = campaignManager.getOpponentCount(for: level)
         navigateTo(.game)
     }
     
@@ -73,11 +92,24 @@ class AppViewModel: ObservableObject {
     func handleGameCompletion(result: GameResult) {
         switch result.state {
         case .victory:
-            addCoins(100) // +100 coins for victory as per Terms
+            addCoins(100)
+            if currentGameMode == .campaign {
+                campaignManager.completeLevel(campaignManager.currentLevel)
+            }
         case .defeat, .draw, .maxRoundsReached:
-            break // No reward for these outcomes
+            break
         case .notStarted, .inProgress:
-            break // Invalid completion states
+            break
         }
+    }
+    
+    // MARK: - Campaign Management
+    func hasNextCampaignLevel() -> Bool {
+        return currentGameMode == .campaign && campaignManager.hasNextLevel()
+    }
+    
+    func goToNextCampaignLevel() {
+        guard let nextLevel = campaignManager.getNextLevel() else { return }
+        navigateToCampaignGame(level: nextLevel)
     }
 }

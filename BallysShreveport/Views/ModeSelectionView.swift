@@ -40,7 +40,7 @@ struct ModeSelectionView: View {
                 Spacer()
                 
                 Button {
-                    // appViewModel.navigateTo..
+                     appViewModel.navigateToCampaignLevelSelection()
                 } label: {
                     ActionView(
                         imageResource: .button1,

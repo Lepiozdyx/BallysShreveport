@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GameResultView: View {
     @ObservedObject var viewModel: GameViewModel
+    @EnvironmentObject private var appViewModel: AppViewModel
     
     var body: some View {
         ZStack {
@@ -31,16 +32,43 @@ struct GameResultView: View {
                     }
                 }
                 
-                VStack(spacing: 20) {
-                    Button {
-                        viewModel.startNewGame()
-                    } label: {
-                        ActionView(
-                            width: 150,
-                            height: 60,
-                            text: "New Game",
-                            textSize: 20
-                        )
+                VStack(spacing: 10) {
+                    if viewModel.isCampaignMode {
+                        if viewModel.gameResult?.state == .victory && appViewModel.hasNextCampaignLevel() {
+                            Button {
+                                appViewModel.goToNextCampaignLevel()
+                            } label: {
+                                ActionView(
+                                    width: 150,
+                                    height: 60,
+                                    text: "Next Level",
+                                    textSize: 20
+                                )
+                            }
+                        }
+                        
+                        Button {
+                            appViewModel.navigateToCampaignLevelSelection()
+                        } label: {
+                            ActionView(
+                                imageResource: .button1,
+                                width: 150,
+                                height: 60,
+                                text: "Level Select",
+                                textSize: 20
+                            )
+                        }
+                    } else {
+                        Button {
+                            viewModel.startNewGame()
+                        } label: {
+                            ActionView(
+                                width: 150,
+                                height: 60,
+                                text: "New Game",
+                                textSize: 20
+                            )
+                        }
                     }
                     
                     Button {
@@ -85,4 +113,5 @@ struct GameResultView: View {
     gameViewModel.showResultScreen = true
     
     return GameResultView(viewModel: gameViewModel)
+        .environmentObject(AppViewModel())
 }

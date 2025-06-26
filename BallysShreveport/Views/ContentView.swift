@@ -21,6 +21,11 @@ struct ContentView: View {
                     .environmentObject(appViewModel)
                     .transition(.opacity)
                 
+            case .campaignLevelSelection:
+                LevelSelectionView()
+                    .environmentObject(appViewModel)
+                    .transition(.opacity)
+                
             case .game:
                 GameView()
                     .environmentObject(appViewModel)

@@ -5,6 +5,7 @@ enum Navigation: CaseIterable {
     
     case modeSelection
     case aiModeSetup
+    case campaignLevelSelection
     
     case game
     

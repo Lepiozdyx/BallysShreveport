@@ -12,6 +12,8 @@ class GameViewModel: ObservableObject {
     @Published var showingRegionMenu: Bool = false
     @Published var attackTargets: [AttackTarget] = []
     @Published var explodingRegions: Set<String> = []
+    @Published var currentGameMode: AppViewModel.GameMode = .vsAI
+    @Published var currentCampaignLevel: Int = 1
     
     weak var appViewModel: AppViewModel?
     private var cancellables = Set<AnyCancellable>()
@@ -278,6 +280,14 @@ class GameViewModel: ObservableObject {
         gameManager.animationInProgress
     }
     
+    var isCampaignMode: Bool {
+        return currentGameMode == .campaign
+    }
+
+    var campaignLevelDisplayText: String {
+        return isCampaignMode ? "Level \(currentCampaignLevel)" : ""
+    }
+    
     // MARK: - Region State Queries
     func isRegionDestroyed(countryIndex: Int, regionIndex: Int) -> Bool {
         print("=== isRegionDestroyed Check ===")
@@ -510,6 +520,8 @@ class GameViewModel: ObservableObject {
     // MARK: - Setup
     func setupWith(appViewModel: AppViewModel) {
         self.appViewModel = appViewModel
+        self.currentGameMode = appViewModel.currentGameMode
+        self.currentCampaignLevel = appViewModel.campaignManager.currentLevel
         
         // Update opponent count if it has changed
         if self.opponentCount != appViewModel.opponentCount {
