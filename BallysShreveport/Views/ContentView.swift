@@ -38,8 +38,7 @@ struct ContentView: View {
                     .transition(.opacity)
                 
             case .shop:
-                // Temp
-                MenuView()
+                ShopView()
                     .environmentObject(appViewModel)
                     .transition(.opacity)
                 

@@ -18,11 +18,16 @@ class AppViewModel: ObservableObject {
     @Published var opponentCount: Int = 3
     @Published var currentGameMode: GameMode = .vsAI
     @Published var campaignManager = CampaignManager()
+    @Published var backgrounds: [BackgroundItem] = []
+    @Published var currentBackground: BackgroundType = .bg
     
     private let coinsKey = "bally_player_coins"
+    private let ownedBackgroundsKey = "bally_owned_backgrounds"
+    private let currentBackgroundKey = "bally_current_background"
     
     init() {
         loadPlayerData()
+        initializeBackgrounds()
     }
     
     // MARK: - Navigation Management
@@ -65,10 +70,63 @@ class AppViewModel: ObservableObject {
     // MARK: - Player Data Management
     private func loadPlayerData() {
         coins = UserDefaults.standard.integer(forKey: coinsKey)
+        loadBackgroundData()
     }
     
     private func savePlayerData() {
         UserDefaults.standard.set(coins, forKey: coinsKey)
+        saveBackgroundData()
+    }
+    
+    // MARK: - Background Management
+    private func initializeBackgrounds() {
+        let ownedBackgrounds = getOwnedBackgrounds()
+        
+        backgrounds = BackgroundType.allCases.map { type in
+            var item = BackgroundItem(type: type)
+            item.isOwned = ownedBackgrounds.contains(type.rawValue) || type.isFree
+            return item
+        }
+    }
+    
+    private func loadBackgroundData() {
+        if let backgroundRawValue = UserDefaults.standard.string(forKey: currentBackgroundKey),
+           let background = BackgroundType(rawValue: backgroundRawValue) {
+            currentBackground = background
+        }
+    }
+    
+    private func saveBackgroundData() {
+        UserDefaults.standard.set(currentBackground.rawValue, forKey: currentBackgroundKey)
+        
+        let ownedBackgroundRawValues = backgrounds
+            .filter { $0.isOwned }
+            .map { $0.type.rawValue }
+        UserDefaults.standard.set(ownedBackgroundRawValues, forKey: ownedBackgroundsKey)
+    }
+    
+    private func getOwnedBackgrounds() -> [String] {
+        return UserDefaults.standard.stringArray(forKey: ownedBackgroundsKey) ?? []
+    }
+    
+    func handleBackgroundAction(for backgroundType: BackgroundType) {
+        guard let index = backgrounds.firstIndex(where: { $0.type == backgroundType }) else { return }
+        let backgroundItem = backgrounds[index]
+        
+        if backgroundItem.isOwned {
+            // Select background
+            currentBackground = backgroundType
+            saveBackgroundData()
+        } else {
+            // Try to buy background
+            if canSpendCoins(backgroundItem.price) {
+                if spendCoins(backgroundItem.price) {
+                    backgrounds[index].isOwned = true
+                    currentBackground = backgroundType
+                    saveBackgroundData()
+                }
+            }
+        }
     }
     
     // MARK: - Coins Management

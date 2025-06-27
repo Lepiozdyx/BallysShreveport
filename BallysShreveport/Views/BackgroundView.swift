@@ -1,15 +1,10 @@
-//
-//  BackgroundView.swift
-//  BallysShreveport
-//
-//  Created by Alex on 20.06.2025.
-//
-
 import SwiftUI
 
 struct BackgroundView: View {
+    @EnvironmentObject private var appViewModel: AppViewModel
+    
     var body: some View {
-        Image(.bg)
+        Image(appViewModel.currentBackground.imageName)
             .resizable()
             .ignoresSafeArea()
     }
@@ -17,4 +12,5 @@ struct BackgroundView: View {
 
 #Preview {
     BackgroundView()
+        .environmentObject(AppViewModel())
 }
