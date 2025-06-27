@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension Text {
-    func fontBangers(_ size: CGFloat, color: Color = .white) -> some View {
+    func fontBangers(_ size: CGFloat, color: Color = .white, textAlignment: TextAlignment = .center) -> some View {
         let baseFont = UIFont(name: "Bangers", size: size) ?? UIFont.systemFont(ofSize: size, weight: .semibold)
         
         let scaledFont = UIFontMetrics(forTextStyle: .headline).scaledFont(for: baseFont)
@@ -10,7 +10,7 @@ extension Text {
             .font(Font(scaledFont))
             .foregroundStyle(color)
             .shadow(color: .black, radius: 1)
-            .multilineTextAlignment(.center)
+            .multilineTextAlignment(textAlignment)
     }
 }
 

@@ -18,6 +18,7 @@ class AppViewModel: ObservableObject {
     @Published var opponentCount: Int = 3
     @Published var currentGameMode: GameMode = .vsAI
     @Published var campaignManager = CampaignManager()
+    @Published var achievementManager = AchievementManager()
     @Published var backgrounds: [BackgroundItem] = []
     @Published var currentBackground: BackgroundType = .bg
     
@@ -124,6 +125,11 @@ class AppViewModel: ObservableObject {
                     backgrounds[index].isOwned = true
                     currentBackground = backgroundType
                     saveBackgroundData()
+                    
+                    // Trigger SHOPPER achievement on first purchase
+                    if !achievementManager.isAchievementUnlocked(type: .shopper) {
+                        achievementManager.onFirstPurchase()
+                    }
                 }
             }
         }

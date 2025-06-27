@@ -43,8 +43,7 @@ struct ContentView: View {
                     .transition(.opacity)
                 
             case .achievements:
-                // Temp
-                MenuView()
+                AchievementsView()
                     .environmentObject(appViewModel)
                     .transition(.opacity)
             }
