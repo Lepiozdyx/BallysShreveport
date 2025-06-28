@@ -30,10 +30,10 @@ struct AchievementCardView: View {
                 Image(.button2)
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 60)
+                    .frame(height: 30)
                     .overlay {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.green)
                     }
             }
