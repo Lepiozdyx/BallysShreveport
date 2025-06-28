@@ -45,5 +45,5 @@ struct PauseMenuView: View {
 }
 
 #Preview {
-    PauseMenuView(viewModel: GameViewModel(gameManager: GameManager()))
+    PauseMenuView(viewModel: GameViewModel())
 }

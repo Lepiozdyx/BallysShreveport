@@ -4,7 +4,7 @@ import Combine
 
 @MainActor
 class GameViewModel: ObservableObject {
-    @Published var gameManager: GameManager
+    @Published var gameManager: GameManager?
     @Published var showPauseMenu: Bool = false
     @Published var showResultScreen: Bool = false
     @Published var gameResult: GameResult?
@@ -18,20 +18,17 @@ class GameViewModel: ObservableObject {
     weak var appViewModel: AppViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var lastProcessedRound: Int = 0
-    private var opponentCount: Int = 3
     
-    init(gameManager: GameManager) {
-        self.gameManager = gameManager
-        setupObservers()
-    }
-    
-    init(opponentCount: Int) {
-        self.opponentCount = opponentCount
-        self.gameManager = GameManager(opponentCount: opponentCount)
-        setupObservers()
+    init() {
+        // Empty init - GameManager will be injected via setupWith
     }
     
     private func setupObservers() {
+        guard let gameManager = gameManager else { return }
+        
+        // Clear previous subscriptions
+        cancellables.removeAll()
+        
         // Observe changes in gameManager
         gameManager.$game
             .sink { [weak self] _ in
@@ -48,6 +45,7 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateAttackTargets() {
+        guard let gameManager = gameManager else { return }
         attackTargets = gameManager.getAttackTargets()
     }
     
@@ -81,7 +79,8 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Game Lifecycle
     func startNewGame() {
-        gameManager.startNewGame(opponentCount: opponentCount)
+        guard let gameManager = gameManager else { return }
+        gameManager.startNewGame(opponentCount: gameManager.game.countries.count - 1)
         resetGameUI()
         updateAttackTargets()
     }
@@ -111,6 +110,8 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Phase Management
     func endCurrentPhase() {
+        guard let gameManager = gameManager else { return }
+        
         print("=== Ending Phase ===")
         print("Current phase: \(currentPhase)")
         print("Player rockets: \(humanPlayer?.availableRockets ?? 0)")
@@ -125,6 +126,8 @@ class GameViewModel: ObservableObject {
     }
     
     private func checkForGameEnd() {
+        guard let gameManager = gameManager else { return }
+        
         if gameManager.isGameOver {
             gameResult = gameManager.getGameResult()
             if let result = gameResult {
@@ -200,7 +203,8 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Economy Phase Actions
     func buyRocket() {
-        guard let regionIndex = selectedRegionIndex,
+        guard let gameManager = gameManager,
+              let regionIndex = selectedRegionIndex,
               canBuyRocket() else {
             print("Cannot buy rocket - regionIndex: \(selectedRegionIndex ?? -1), canBuy: \(canBuyRocket())")
             return
@@ -214,7 +218,8 @@ class GameViewModel: ObservableObject {
     }
     
     func buyAirDefense() {
-        guard let regionIndex = selectedRegionIndex,
+        guard let gameManager = gameManager,
+              let regionIndex = selectedRegionIndex,
               canBuyAirDefense(for: regionIndex) else { return }
         
         gameManager.buyAirDefenseForRegion(regionIndex)
@@ -230,26 +235,28 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Targeting Phase Actions
     func selectAttackTarget(countryIndex: Int, regionIndex: Int) {
+        guard let gameManager = gameManager else { return }
         gameManager.selectAttackTarget(countryIndex: countryIndex, regionIndex: regionIndex)
         updateAttackTargets()
     }
     
     func removeAttackTarget(at index: Int) {
+        guard let gameManager = gameManager else { return }
         gameManager.removeAttackTarget(at: index)
         updateAttackTargets()
     }
     
     // MARK: - Game State Properties
     var currentGame: Game {
-        gameManager.game
+        gameManager?.game ?? Game()
     }
     
     var humanPlayer: Player? {
-        gameManager.humanPlayer
+        gameManager?.humanPlayer
     }
     
     var humanCountry: Country? {
-        gameManager.humanCountry
+        gameManager?.humanCountry
     }
     
     var currentPhase: GamePhase {
@@ -269,15 +276,15 @@ class GameViewModel: ObservableObject {
     }
     
     var canEndPhase: Bool {
-        gameManager.canEndPhase
+        gameManager?.canEndPhase ?? false
     }
     
     var isProcessingTurn: Bool {
-        gameManager.isProcessingTurn
+        gameManager?.isProcessingTurn ?? false
     }
     
     var animationInProgress: Bool {
-        gameManager.animationInProgress
+        gameManager?.animationInProgress ?? false
     }
     
     var isCampaignMode: Bool {
@@ -363,11 +370,11 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Purchase Capabilities
     func canBuyRocket() -> Bool {
-        gameManager.canBuyRocket()
+        gameManager?.canBuyRocket() ?? false
     }
     
     func canBuyAirDefense(for regionIndex: Int) -> Bool {
-        gameManager.canBuyAirDefense(for: regionIndex)
+        gameManager?.canBuyAirDefense(for: regionIndex) ?? false
     }
     
     // MARK: - Visual Properties
@@ -518,18 +525,12 @@ class GameViewModel: ObservableObject {
     }
     
     // MARK: - Setup
-    func setupWith(appViewModel: AppViewModel) {
+    func setupWith(appViewModel: AppViewModel, gameManager: GameManager) {
         self.appViewModel = appViewModel
+        self.gameManager = gameManager
         self.currentGameMode = appViewModel.currentGameMode
         self.currentCampaignLevel = appViewModel.campaignManager.currentLevel
-        
-        // Update opponent count if it has changed
-        if self.opponentCount != appViewModel.opponentCount {
-            self.opponentCount = appViewModel.opponentCount
-            self.gameManager = GameManager(opponentCount: opponentCount)
-            setupObservers()
-        }
-        
+        setupObservers()
         updateAttackTargets()
     }
 }

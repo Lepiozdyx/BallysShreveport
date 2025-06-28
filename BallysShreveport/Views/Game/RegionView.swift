@@ -89,10 +89,17 @@ struct RegionView: View {
         country: .usa
     )
     
-    RegionView(
+    let appViewModel = AppViewModel()
+    let gameManager = GameManager(opponentCount: 3)
+    let gameViewModel = GameViewModel()
+    
+    gameViewModel.setupWith(appViewModel: appViewModel, gameManager: gameManager)
+    
+    return RegionView(
         regionDef: sampleRegion,
         countryIndex: 0,
         regionIndex: 0,
-        viewModel: GameViewModel(gameManager: GameManager())
+        viewModel: gameViewModel
     )
 }
+

@@ -12,27 +12,9 @@ class GameManager: ObservableObject {
     
     private var aiSystems: [Int: AISystem] = [:]
     
-    init() {
-        self.game = Game()
-        initializeAISystems()
-    }
-    
     init(opponentCount: Int) {
         self.game = Game(opponentCount: opponentCount)
         initializeAISystems()
-    }
-    
-    // MARK: - Game Lifecycle
-    func startNewGame() {
-        game = Game()
-        initializeAISystems()
-        game.startGame()
-    }
-    
-    func startNewGame(opponentCount: Int) {
-        game = Game(opponentCount: opponentCount)
-        initializeAISystems()
-        game.startGame()
     }
     
     // MARK: - AI Systems Setup
@@ -51,6 +33,13 @@ class GameManager: ObservableObject {
         print("Total AI systems created: \(aiSystems.count)")
         print("AI system keys: \(Array(aiSystems.keys).sorted())")
         print("=== AI Systems Init Complete ===")
+    }
+    
+    // MARK: - Game Lifecycle
+    func startNewGame(opponentCount: Int) {
+        game = Game(opponentCount: opponentCount)
+        initializeAISystems()
+        game.startGame()
     }
     
     // MARK: - Phase Management

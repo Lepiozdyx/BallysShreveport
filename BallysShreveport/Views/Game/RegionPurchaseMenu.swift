@@ -104,8 +104,5 @@ struct RegionPurchaseMenu: View {
 }
 
 #Preview {
-    let gameViewModel = GameViewModel(gameManager: GameManager())
-    gameViewModel.showingRegionMenu = true
-    
-    return RegionPurchaseMenu(viewModel: gameViewModel)
+    RegionPurchaseMenu(viewModel: GameViewModel())
 }

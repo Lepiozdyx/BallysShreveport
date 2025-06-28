@@ -49,5 +49,5 @@ struct GameUIOverlay: View {
 }
 
 #Preview {
-    GameUIOverlay(viewModel: GameViewModel(gameManager: GameManager()))
+    GameUIOverlay(viewModel: GameViewModel())
 }

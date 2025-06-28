@@ -109,9 +109,6 @@ struct GameResultView: View {
 }
 
 #Preview {
-    let gameViewModel = GameViewModel(gameManager: GameManager())
-    gameViewModel.showResultScreen = true
-    
-    return GameResultView(viewModel: gameViewModel)
+    GameResultView(viewModel: GameViewModel())
         .environmentObject(AppViewModel())
 }

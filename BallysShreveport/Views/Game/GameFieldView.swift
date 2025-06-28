@@ -65,5 +65,5 @@ struct GameFieldView: View {
 }
 
 #Preview {
-    GameFieldView(viewModel: GameViewModel(gameManager: GameManager()))
+    GameFieldView(viewModel: GameViewModel())
 }

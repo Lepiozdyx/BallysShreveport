@@ -46,5 +46,5 @@ struct GameUIBottomPanel: View {
 }
 
 #Preview {
-    GameUIBottomPanel(viewModel: GameViewModel(gameManager: GameManager()))
+    GameUIBottomPanel(viewModel: GameViewModel())
 }

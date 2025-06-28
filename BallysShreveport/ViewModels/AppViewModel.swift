@@ -21,6 +21,7 @@ class AppViewModel: ObservableObject {
     @Published var achievementManager = AchievementManager()
     @Published var backgrounds: [BackgroundItem] = []
     @Published var currentBackground: BackgroundType = .bg
+    @Published var gameManager: GameManager?
     
     private let coinsKey = "bally_player_coins"
     private let ownedBackgroundsKey = "bally_owned_backgrounds"
@@ -39,6 +40,8 @@ class AppViewModel: ObservableObject {
     }
     
     func navigateBackToMenu() {
+        // Clear game manager when returning to menu
+        gameManager = nil
         navigateTo(.menu)
     }
     
@@ -53,6 +56,7 @@ class AppViewModel: ObservableObject {
     
     func navigateToGame() {
         currentGameMode = .vsAI
+        createGameManager()
         navigateTo(.game)
     }
     
@@ -65,7 +69,17 @@ class AppViewModel: ObservableObject {
         currentGameMode = .campaign
         campaignManager.selectLevel(level)
         opponentCount = campaignManager.getOpponentCount(for: level)
+        createGameManager()
         navigateTo(.game)
+    }
+    
+    // MARK: - Game Manager Management
+    private func createGameManager() {
+        gameManager = GameManager(opponentCount: opponentCount)
+    }
+    
+    func restartGame() {
+        createGameManager()
     }
     
     // MARK: - Player Data Management
