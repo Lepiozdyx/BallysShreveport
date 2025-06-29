@@ -16,7 +16,7 @@ struct ModeSelectionView: View {
                             imageResource: .button2,
                             width: 50,
                             height: 50,
-                            text: "\u{2190}",
+                            text: "←",
                             textSize: 24
                         )
                     }
@@ -39,19 +39,19 @@ struct ModeSelectionView: View {
                 
                 Spacer()
                 
-                Button {
-                     appViewModel.navigateToCampaignLevelSelection()
-                } label: {
-                    ActionView(
-                        imageResource: .button1,
-                        width: 200,
-                        height: 80,
-                        text: "Campaign",
-                        textSize: 24
-                    )
-                }
-
                 HStack(spacing: 30) {
+                    Button {
+                         appViewModel.navigateToCampaignLevelSelection()
+                    } label: {
+                        ActionView(
+                            imageResource: .button1,
+                            width: 200,
+                            height: 80,
+                            text: "Campaign",
+                            textSize: 24
+                        )
+                    }
+
                     Button {
                         appViewModel.navigateToAIModeSetup()
                     } label: {
@@ -61,18 +61,6 @@ struct ModeSelectionView: View {
                             height: 80,
                             text: "vs AI",
                             textSize: 24
-                        )
-                    }
-                    
-                    Button {
-                        // appViewModel.navigateTo..
-                    } label: {
-                        ActionView(
-                            imageResource: .button1,
-                            width: 200,
-                            height: 80,
-                            text: "Multiplayer",
-                            textSize: 22
                         )
                     }
                 }
