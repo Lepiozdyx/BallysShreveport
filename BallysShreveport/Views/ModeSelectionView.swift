@@ -71,7 +71,7 @@ struct ModeSelectionView: View {
                             imageResource: .button1,
                             width: 200,
                             height: 80,
-                            text: "Multiplayer on one device",
+                            text: "Multiplayer",
                             textSize: 22
                         )
                     }

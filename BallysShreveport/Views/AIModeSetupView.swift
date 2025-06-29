@@ -16,7 +16,7 @@ struct AIModeSetupView: View {
                             imageResource: .button2,
                             width: 50,
                             height: 50,
-                            text: "\u{2190}",
+                            text: "←",
                             textSize: 24
                         )
                     }
