@@ -23,6 +23,8 @@ class AppViewModel: ObservableObject {
     @Published var currentBackground: BackgroundType = .bg
     @Published var gameManager: GameManager?
     
+    @AppStorage("musicEnabled") var musicEnabled: Bool = true
+    
     private let coinsKey = "bally_player_coins"
     private let ownedBackgroundsKey = "bally_owned_backgrounds"
     private let currentBackgroundKey = "bally_current_background"
@@ -189,5 +191,24 @@ class AppViewModel: ObservableObject {
     func goToNextCampaignLevel() {
         guard let nextLevel = campaignManager.getNextLevel() else { return }
         navigateToCampaignGame(level: nextLevel)
+    }
+    
+    // MARK: - Settings Management
+    func toggleMusic() {
+        musicEnabled.toggle()
+        if musicEnabled {
+            SoundManager.shared.playBackgroundMusic()
+        } else {
+            SoundManager.shared.stopBackgroundMusic()
+        }
+    }
+    
+    func setMusicEnabled(_ enabled: Bool) {
+        musicEnabled = enabled
+        if enabled {
+            SoundManager.shared.playBackgroundMusic()
+        } else {
+            SoundManager.shared.stopBackgroundMusic()
+        }
     }
 }

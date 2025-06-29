@@ -3,12 +3,13 @@ import AVFoundation
 class SoundManager {
     static let shared = SoundManager()
     var audioPlayer: AVAudioPlayer?
+    
+    private init() {}
 
     func playBackgroundMusic() {
-        // Изменено: используем константы из GameConfiguration
         guard let url = Bundle.main.url(
-            forResource: GameConfiguration.Audio.backgroundMusic,
-            withExtension: GameConfiguration.Audio.backgroundMusicExtension
+            forResource: "music",
+            withExtension: "mp3"
         ) else { return }
 
         do {
@@ -16,7 +17,7 @@ class SoundManager {
             audioPlayer?.numberOfLoops = -1
             audioPlayer?.play()
         } catch {
-            print("Could not play background music: \(error)")
+            print("\(error)")
         }
     }
 

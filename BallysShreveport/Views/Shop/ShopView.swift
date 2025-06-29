@@ -37,7 +37,7 @@ struct ShopView: View {
                     imageResource: .underlay2,
                     width: 300,
                     height: 80,
-                    text: "STORE",
+                    text: "Shop",
                     textSize: 24
                 )
                 

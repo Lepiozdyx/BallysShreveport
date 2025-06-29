@@ -33,7 +33,7 @@ enum AchievementType: String, CaseIterable, Codable {
         case .loyalCommander:
             return "LOYAL COMMANDER"
         case .tacticalDuo:
-            return "TACTICAL DUO"
+            return "TACTICAL"
         }
     }
     
@@ -48,7 +48,7 @@ enum AchievementType: String, CaseIterable, Codable {
         case .loyalCommander:
             return "LOG INTO THE GAME FOR 7 CONSECUTIVE DAYS"
         case .tacticalDuo:
-            return "PLAY A GAME IN LOCAL MULTIPLAYER ON ONE DEVICE"
+            return "PLAY A MULTIPLAYER GAME"
         }
     }
     
