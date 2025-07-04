@@ -4,7 +4,7 @@ import SwiftUI
 struct BallysShreveportApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootAppView()
         }
     }
 }
